@@ -33,25 +33,25 @@ blacklist                       = True      #黑名单，在/data/black.txt中�
 adb_command = ''
 #↓↓↓格式化Log等级，一个-v最低，三个-v最高↓↓↓
 if log_lev is 3:
-    adb_command= adb_command + '-v -v -v '
+    adb_command += '-v -v -v '
 elif log_lev is 2:
-    adb_command= adb_command + '-v -v '
+    adb_command += '-v -v '
 else:
-    adb_command= adb_command + "-v "
+    adb_command += "-v "
 
 #↓↓↓格式化seed，一般为了多次执行同一组Event才会用到↓↓↓
 if seed is False:
     pass
 else:
-    adb_command= adb_command + '-s '+str(seed)+" "
+    adb_command += '-s '+str(seed)+" "
 
 #↓↓↓黑、白名单功能,白名单优先级最高，即当白名单为True时，无论黑名单是否为True都执行白名单↓↓↓
 if whitelist is True:
     os.system('adb push %s/data/white.txt /data'%os.getcwd())
-    adb_command= adb_command + '--pkg-whitelist-file /data/white.txt '
+    adb_command += '--pkg-whitelist-file /data/white.txt '
 elif blacklist is True:
     os.system('adb push %s/data/black.txt /data'%os.getcwd())
-    adb_command= adb_command + '--pkg-blacklist-file /data/black.txt '
+    adb_command += '--pkg-blacklist-file /data/black.txt '
 else:
     pass
 
@@ -59,19 +59,19 @@ else:
 if throttle is False:
     pass
 else:
-    adb_command= adb_command + '--throttle '+str(throttle) +" "
+    adb_command += '--throttle '+str(throttle) +" "
 
 #↓↓↓生成profiling报告↓↓↓
 if hprof is False:
     pass
 else:
-    adb_command= adb_command + '--hprof'+" "
+    adb_command += '--hprof'+" "
 
 #↓↓↓格式化‘忽略超时’命令↓↓↓
 if ignore_timeouts is False:
     pass
 else:
-    adb_command= adb_command + '--ignore-timeouts'+" "
+    adb_command += '--ignore-timeouts'+" "
 
 #↓↓↓函数：获取当前日期时间↓↓↓
 def cur_times(x):
