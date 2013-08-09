@@ -1,1 +1,1 @@
-com.android.music
+com.softwinner.fireplayer
