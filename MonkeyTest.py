@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*
 '''
-__author__ = 'Kevin'
+__author__  = 'Kevin'
+__version__ = '0.7'
 '''
 import os
 import time
-import re
-from subprocess import Popen, PIPE
+import logging
+import logAnalysis
+import adbCmd
 
 #hours
-run_time                        = 12
+run_time                        = 0.001
 
 #发送Event数量
-events                          = 216000
+events                          = 500
 
 #3为最高，1为最低
 log_lev                         = 3
@@ -20,7 +22,7 @@ log_lev                         = 3
 seed                            = False
 
 #插入固定延时
-throttle                        = 200
+throttle                        = 500
 
 #触摸事件百分比
 pct_touch                       = False
@@ -41,15 +43,16 @@ pct_majornav                    = False
 pct_syskeys                     = False
 
 #启动Activity的百分比。在随机间隔里，Monkey将执行一个startActivity()调用，作为最大程度覆盖包中全部Activity的一种方法
-pct_appswitch                   = False
+pct_appswitch                   = 50
 
 #调整其它类型事件的百分比。它包罗了所有其它类型的事件，如：按键、其它不常用的设备按钮、等等。
-pct_anyevent                    = False
+pct_anyevent                    = 0
 
 #指定了一个或几个包，一个“-p”对应一个包。
 p_allowed_package_name          = False
 
-#指定了一个或几个类别，一个“-c”对应一个类别。若不指定则将选择下列类别中列出的Activity： Intent.CATEGORY_LAUNCHER或Intent.CATEGORY_MONKEY。
+#指定了一个或几个类别，一个“-c”对应一个类别。若不指定则将选择下列类别中列出的Activity： Intent.CATEGORY_LAUNCHER或
+# Intent.CATEGORY_MONKEY。
 c_main_category                 = False
 
 #设置此选项，Monkey将执行初始启动，进入到一个测试Activity，然后不会再进一步生成事件
@@ -67,7 +70,8 @@ ignore_timeouts                 = True
 #设置此选项，Monkey将在应用程序发生许可错误(如启动一个需要某些许可的Activity)时，继续向系统发送事件，直到计数完成。
 ignore_security_exceptions      = False
 
-#当Monkey由于一个错误而停止时，出错的应用程序将继续处于运行状态。设置此项时，将会通知系统停止发生错误的进程。注意，正常的(成功的)结束，并没有停止启动的进程，设备只是在结束事件之后，简单地保持在最后的状态。
+#当Monkey由于一个错误而停止时，出错的应用程序将继续处于运行状态。设置此项时，将会通知系统停止发生错误的进程。注意，正常的(成功的)结束，
+# 并没有停止启动的进程，设备只是在结束事件之后，简单地保持在最后的状态。
 kill_process_after_error        = False
 
 #监视并报告Android系统中本地代码的崩溃事件。如果设置了--kill-process-after-error，系统将停止运行。
@@ -77,17 +81,37 @@ monitor_native_crashes          = False
 wait_dbg                        = False
 
 #白名单，在/data/white.txt中指定需要测试的APK
-whitelist                       = False
+whitelist                       = True
 
 #黑名单，在/data/black.txt中指定不需要测试的APK
 blacklist                       = True
 
-Result_path                     = 'D:\\log\\MonkeyTest\\'
-get_log                         = '/data/local/logs'
+#-------------------------------*Logging*-------------------------------
+# 创建一个logger
+logger = logging.getLogger('MonkeyTest')
+logger.setLevel(logging.DEBUG)
+
+# 创建一个handler，用于写入日志文件
+fh = logging.FileHandler('Reports.log')
+fh.setLevel(logging.DEBUG)
+
+# 再创建一个handler，用于输出到控制台
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+
+# 定义handler的输出格式
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+ch.setFormatter(formatter)
+
+# 给logger添加handler
+logger.addHandler(fh)
+logger.addHandler(ch)
+#-------------------------------*Logging*-------------------------------
 
 adb_command = ''
 
-#↓↓↓格式化Log等级，一个-v最低，三个-v最高↓↓↓
+#格式化Log等级，一个-v最低，三个-v最高
 if log_lev is 3:
     adb_command += '-v -v -v '
 elif log_lev is 2:
@@ -95,15 +119,16 @@ elif log_lev is 2:
 else:
     adb_command += "-v "
 
-#↓↓↓格式化seed，一般为了多次执行同一组Event才会用到↓↓↓
+# If you 're-run' the Monkey with the same seed value,
+# it will generate the same sequence of events.
 if seed is False:
     pass
 else:
     adb_command += '-s '+str(seed)+" "
 
-#↓↓↓黑、白名单功能,白名单优先级最高，即当白名单为True时，无论黑名单是否为True都执行白名单↓↓↓
+#Black/white list, white list with a higher priority.
 if whitelist is True:
-    os.system('adb push %s/data/white.txt /data'%os.getcwd())
+    os.system('adb push %s/data/white.txt /data/white.txt'%os.getcwd())
     adb_command += '--pkg-whitelist-file /data/white.txt '
 elif blacklist is True:
     os.system('adb push %s/data/black.txt /data'%os.getcwd())
@@ -111,31 +136,41 @@ elif blacklist is True:
 else:
     pass
 
-#↓↓↓设定Event延时，也就是每个Event之间的间隔↓↓↓
+#formart time interval between events.
 if throttle is False:
     pass
 else:
     adb_command += '--throttle '+str(throttle) +" "
 
-#↓↓↓生成profiling报告↓↓↓
+# formart profiling report.
 if hprof is False:
     pass
 else:
     adb_command += '--hprof'+" "
 
-#↓↓↓格式化‘忽略超时’命令↓↓↓
+# formart timeouts
 if ignore_timeouts is False:
     pass
 else:
     adb_command += '--ignore-timeouts'+" "
 
+# formart app switch percentage.
+if pct_appswitch is False:
+    pass
+else:
+    adb_command += '--pct-appswitch '+ str(pct_appswitch) + " "
+
+# formart 'anyevent'
+if pct_anyevent is False:
+    pass
+else:
+    adb_command += '--pct-anyevent '+ str(pct_anyevent) + " "
 
 def cur_times(x):
     '''
-    获取当前日期时间:
-    形参为date：获取当前日期，如20130808
-    形参为time：获取当前时间，如135035
-    形参为datetime：获取当前日期时间，20130808-135035
+    date：Get the current date，e.g. 20130808
+    time：Get the current time，e.g. 135035
+    datetime：Get the current datetime，e.g. 20130808-135035
     '''
     if x is 'date':
         x = time.strftime('%Y%m%d',time.localtime(time.time()))
@@ -147,87 +182,75 @@ def cur_times(x):
         x = time.strftime('%Y%m%d-%H%M%S',time.localtime(time.time()))
         return x
     else:
-        print('Please enter a valid time parameter!')
+        logger.warning('The time parameter is valid')
 
 def md_path(x):
     '''
-    函数创建指定路径，如果不存在就创建
+    Create log path.
     '''
     if os.path.exists(x):
-        print('log dir is exist...')
+        logger.info('log dir is exist...')
     else:
-        print('log dir is not exist, Create it now...')
+        logger.info('log dir is not exist, Create it now...')
         os.makedirs(x)
-        print('Done.')
+        logger.info('Created.')
 
 def testDone():
     '''
-    测试完成时的输出
+    works done.
     '''
-    fp = open('%sResult.txt' %(Result_path),'a')
-    print('Test Termination: Test time to:',time.time()-start_time,file=fp)
-    print('Test Termination: Test time to:',time.time()-start_time)
-    print('已完成测试：%s 次'%n,file=fp)
-    print('已完成测试：%s 次'%n)
-    fp.close()
-    print('Test is done.')
+    logger.info('%s %s',*('Test Termination: Test time to:',time.time()-start_time))
+    logger.info('%s %s %s',*('Tested ',n-1,' times.'))
+    logger.info('Test is done.')
 
 #------------------Test start,mark start time.--------------------
 start_time = time.time()
 
-# log Analysis Function.
-# crash_count = []
-
 # set start times.
 n = 1
+now = cur_times('datetime')
+Result_path  = 'D:\\log\\MonkeyTest\\%s' %now
 
 #Test loop.
 while int(time.time()-start_time) <= run_time*3600:
-    #Set the directory to save log.
-    # events_log = '%s' %(Result_path)
-    #创建log目录
-    md_path(Result_path)
-
-    #use 'adb remount' check devices and remount.
-    cmd = 'adb remount'
-    resp = Popen(cmd, shell=True,stdout=PIPE, stderr=PIPE).stdout.readlines()
-    # print(resp)
-    #Judgment resp returned results.
-    if resp == []:
-        print('error: device not found.')
-        testDone()
+    r = adbCmd.adbSerialno('adb get-serialno')
+    if r[0] == 'unknown':
+        print 'No devices is connected.'
         break
+    elif len(r) > 1:
+        print 'Multiple devices connected.'
     else:
-        #Creat result log.
-        fp = open('%sResult.txt' %(Result_path),'a')
-        result = str(resp)[3:-6]
-        print('当前测试次数：第 %s 次' %n,file=fp)
-        print('当前测试次数：第 %s 次' %n)
-        print(result,file=fp) #return 'remount succeeded'
-        print(result)
+        # print 'Connected devices : ',r[0]
+        logger.info('Connected devices : %s' %r[0])
+        # Creat log dir.
+        md_path(Result_path)
+        logger.info('当前测试次数：第 %s 次' %n)
         events_log_name = 'MonkeyEvents_%s.log' %cur_times('time')
-        print('Log_name:',events_log_name)
-        #格式化成最终的MonkeyTest命令
-        run_monkey = 'adb shell monkey %s%s ' %(adb_command,events) +'> ' + Result_path + events_log_name
-        print('Run Command:',run_monkey,file=fp)
-        print('Run Command:',run_monkey)
-        #Run adb command.
+        logger.info('%s %s' %('Log_name:', events_log_name))
+        # last MonkeyTest command.
+        run_monkey = 'adb shell monkey %s%s > %s\\%s' %(adb_command,
+                                                        events,
+                                                        Result_path,
+                                                        events_log_name)
+        logger.info('%s %s',*('Run Command:',run_monkey))
+
+        # Test running.
         os.system(run_monkey)
-        #Set the directory to save logcat.
-        logcat = '%sLogcat_%s' % (Result_path,cur_times('datetime'))
-        print('Logcat save to :',logcat)
-        pull_log = "adb pull %s %s%s" %(get_log,logcat,cur_times('time'))
-        print('Get logcat:',pull_log)
-        #pull log to PC form target device.
-        os.system(pull_log)
-        # print('Start analyzing log')
-        print('Ready next test.')
-        n += 1
-    fp.close()
-    time.sleep(10)
+
+        time.sleep(1)
+    n += 1
 else:
+    fl = logAnalysis.traverse(Result_path)
+    analy = logAnalysis.crashlist(fl)
+    # print analy
+    results = logAnalysis.xTable(analy)
+    if results:
+        print 'PackageName --- Crashed times'
+        for k in results:
+            print '->%s --- %s times'%(k,results[k])
+    else:
+        logger.info('No crashed app is fond.')
     testDone()
-    break
 
 #use explorer open log dir.
-os.system(r'explorer /select,%s' %(Result_path))
+# os.system(r'explorer /select,%s' %(Result_path))
