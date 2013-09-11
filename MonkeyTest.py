@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*
 '''
 __author__  = 'Kevin'
-__version__ = '0.7'
+__version__ = '0.8'
 '''
 import os
 import time
@@ -10,7 +10,7 @@ import logAnalysis
 import adbCmd
 
 #hours
-run_time                        = 0.001
+run_time                        = 0.1
 
 #发送Event数量
 events                          = 500
