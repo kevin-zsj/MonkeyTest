@@ -215,12 +215,11 @@ Result_path  = 'D:\\log\\MonkeyTest\\%s' %now
 while int(time.time()-start_time) <= run_time*3600:
     r = adbCmd.adbSerialno('adb get-serialno')
     if r[0] == 'unknown':
-        print 'No devices is connected.'
+        logger.warning('No devices is connected.')
         break
     elif len(r) > 1:
-        print 'Multiple devices connected.'
+        logger.warning('Multiple devices connected.')
     else:
-        # print 'Connected devices : ',r[0]
         logger.info('Connected devices : %s' %r[0])
         # Creat log dir.
         md_path(Result_path)
@@ -245,9 +244,9 @@ else:
     # print analy
     results = logAnalysis.xTable(analy)
     if results:
-        print 'PackageName --- Crashed times'
+        logger.info('PackageName --- Crashed times')
         for k in results:
-            print '->%s --- %s times'%(k,results[k])
+            logger.info('->%s --- %s times'%(k,results[k]))
     else:
         logger.info('No crashed app is fond.')
     testDone()
