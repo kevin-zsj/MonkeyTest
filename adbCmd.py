@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*
-__author__ = 'Kevin'
-
+# -*- coding: utf-8 -*-
 from subprocess import Popen, PIPE
 
+
 def adbSerialno(s):
-    resp = Popen(s, shell=True,stdout=PIPE, stderr=PIPE).stdout.readlines()
+    resp = Popen(s, shell=True, stdout=PIPE, stderr=PIPE).stdout.readlines()
     a = []
     for i in resp:
         a.append(i.strip('\r\n'))

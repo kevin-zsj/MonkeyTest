@@ -1,17 +1,18 @@
-# -*- coding: GBK -*-
-__author__ = 'A'
+# -*- coding: utf-8 -*-
 import os
 import re
+
 
 def traverse(path):
     '''
     遍历指定路径下的所有文件
     '''
     filesName = []
-    for root,dirs,files in os.walk(path):
+    for root, dirs, files in os.walk(path):
         for fn in files:
-            filesName.append(os.path.join(root,fn))
+            filesName.append(os.path.join(root, fn))
     return filesName
+
 
 def reCrash(s):
     '''
@@ -19,11 +20,12 @@ def reCrash(s):
     如：从// CRASH: com.wandoujia.phoenix2 (pid 3903)中提取出com.wandoujia.phoenix2
     '''
     m = '//\sCRASH:\s(.*)\s[(]pid\s(.*)[)]'
-    n = re.match(m,s)
+    n = re.match(m, s)
     if n:
         return n.group(1)
     else:
         return None
+
 
 def crashlist(filesList):
     crashCount = []
@@ -34,8 +36,9 @@ def crashlist(filesList):
                 if mCrash:
                     crashCount.append(mCrash)
         except:
-            print('Faild to open file the %s.' %filesName)
+            print('Faild to open file the %s.' % filesName)
     return crashCount
+
 
 def xTable(l):
     res = {}
@@ -49,7 +52,6 @@ if __name__ == '__main__':
     results = xTable(m)
     print 'PackageName --- Crashed times'
     for k in results:
-        print '->%s --- %s times'%(k,results[k])
+        print '->%s --- %s times' % (k, results[k])
     print
     raw_input('Press any key to continue...')
-
