@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 '''
 __author__  = 'Kevin'
-__version__ = '0.8'
+__version__ = '0.81'
 '''
 import os
+import sys
 import time
 import logging
 import logAnalysis
@@ -111,6 +112,7 @@ logger.addHandler(ch)
 # -------------------------------*Logging*-------------------------------
 
 adb_command = ''
+cpath = sys.path[0]
 
 # 格式化Log等级，一个-v最低，三个-v最高
 if log_lev is 3:
@@ -129,13 +131,14 @@ else:
 
 # Black/white list, white list with a higher priority.
 if whitelist is True:
-    os.system('adb push %s/data/white.txt /data/white.txt' % os.getcwd())
+    push_white = 'adb push {}/data/white.txt /data/white.txt'.format(cpath)
+    os.system(push_white)
     adb_command += '--pkg-whitelist-file /data/white.txt '
 elif blacklist is True:
-    os.system('adb push %s/data/black.txt /data' % os.getcwd())
+    push_black = 'adb push {}/data/black.txt /data/black.txt'.format(cpath)
+    os.system(push_black)
     adb_command += '--pkg-blacklist-file /data/black.txt '
-else:
-    pass
+
 
 # formart time interval between events.
 if throttle is False:
@@ -208,13 +211,14 @@ def testDone():
     logger.info('%s %s %s', *('Tested ', n - 1, ' times.'))
     logger.info('Test is done.')
 
-# ------------------Test start,mark start time.--------------------
+# ------------------Test start, mark start time.--------------------
 start_time = time.time()
 
 # set start times.
 n = 1
 now = cur_times('datetime')
-Result_path = './MonkeyResult/%s' % now
+Result_path = '{}/MonkeyResult/{}'.format(cpath, now)
+print 'Result path:', Result_path
 
 # Test loop.
 while int(time.time() - start_time) <= run_time * 3600:
@@ -224,13 +228,14 @@ while int(time.time() - start_time) <= run_time * 3600:
         break
     elif len(r) > 1:
         logger.warning('Multiple devices connected.')
+        break
     else:
-        logger.info('Connected devices : %s' % r[0])
+        logger.info('Connected devices : {}'.format(r[0]))
         # Creat log dir.
         md_path(Result_path)
-        logger.info('当前测试次数：第 %s 次' % n)
-        events_log_name = 'MonkeyEvents_%s.log' % cur_times('time')
-        logger.info('%s %s' % ('Log_name:', events_log_name))
+        logger.info('Times: {} '.format(n))
+        events_log_name = 'MonkeyEvents_{}.log'.format(cur_times('time'))
+        logger.info('Log_name: {}'.format(events_log_name))
         # last MonkeyTest command.
         run_monkey = 'adb shell monkey %s%s > %s\\%s' % (adb_command,
                                                          events,
