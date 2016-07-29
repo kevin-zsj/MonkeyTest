@@ -14,7 +14,7 @@ import adbCmd
 run_time = 0.1
 
 # 发送Event数量
-events = 500
+events = 5000
 
 # 3为最高，1为最低
 log_lev = 3
@@ -132,12 +132,12 @@ else:
 # Black/white list, white list with a higher priority.
 if whitelist is True:
     push_white = 'adb push {}/data/white.txt /data/white.txt'.format(cpath)
-    os.system(push_white)
-    adb_command += '--pkg-whitelist-file /data/white.txt '
+    if os.system(push_white) == 0:
+        adb_command += '--pkg-whitelist-file /data/white.txt '
 elif blacklist is True:
     push_black = 'adb push {}/data/black.txt /data/black.txt'.format(cpath)
-    os.system(push_black)
-    adb_command += '--pkg-blacklist-file /data/black.txt '
+    if os.system(push_black) == 0:
+        adb_command += '--pkg-blacklist-file /data/black.txt '
 
 
 # formart time interval between events.
