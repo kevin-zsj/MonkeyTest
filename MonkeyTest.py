@@ -11,10 +11,10 @@ import logAnalysis
 import adbCmd
 
 # hours
-run_time = 0.1
+run_time = 12
 
 # 发送Event数量
-events = 5000
+events = 50000
 
 # 3为最高，1为最低
 log_lev = 3
@@ -82,7 +82,7 @@ monitor_native_crashes = False
 wait_dbg = False
 
 # 白名单，在/data/white.txt中指定需要测试的APK
-whitelist = True
+whitelist = False
 
 # 黑名单，在/data/black.txt中指定不需要测试的APK
 blacklist = True
@@ -131,13 +131,13 @@ else:
 
 # Black/white list, white list with a higher priority.
 if whitelist is True:
-    push_white = 'adb push {}/data/white.txt /data/white.txt'.format(cpath)
+    push_white = 'adb push {}/data/white.txt /sdcard/white.txt'.format(cpath)
     if os.system(push_white) == 0:
-        adb_command += '--pkg-whitelist-file /data/white.txt '
+        adb_command += '--pkg-whitelist-file /sdcard/white.txt '
 elif blacklist is True:
-    push_black = 'adb push {}/data/black.txt /data/black.txt'.format(cpath)
+    push_black = 'adb push {}/data/black.txt /sdcard/black.txt'.format(cpath)
     if os.system(push_black) == 0:
-        adb_command += '--pkg-blacklist-file /data/black.txt '
+        adb_command += '--pkg-blacklist-file /sdcard/black.txt '
 
 
 # formart time interval between events.
