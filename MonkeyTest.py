@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
 __author__  = 'Kevin'
-__version__ = '0.81'
 '''
 import os
 import sys
