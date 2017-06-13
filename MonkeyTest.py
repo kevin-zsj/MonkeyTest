@@ -2,15 +2,17 @@
 '''
 __author__  = 'Kevin'
 '''
+import logging
 import os
+import subprocess
 import sys
 import time
-import logging
+
+# import adbCmd
 import logAnalysis
-import adbCmd
 
 # hours
-run_time = 12
+run_time = 2
 
 # 发送Event数量
 events = 50000
@@ -210,7 +212,47 @@ def testDone():
     logger.info('%s %s %s', *('Tested ', n - 1, ' times.'))
     logger.info('Test is done.')
 
+
+def chkPower():
+    '''
+    检查样机电量的百分比，返回一个int类型的数值
+    '''
+    cmd = ['adb', 'shell', 'cat', '/sys/class/power_supply/battery/uevent',
+           '|', 'grep', 'POWER_SUPPLY_CAPACITY']
+    run = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    getvalue = run.stdout.read().split('=')[1].strip()
+    return int(getvalue)
+
+
+def chkDevices():
+    '''
+    使用‘adb shell’命令获取设备连接信息，若有Android设备连接则打印Devices ID，同时返回一个值：
+    0 ：无设备连接
+    1 ：有一台设备连接
+    2 ：有两台或两台以上的设备连接
+    '''
+    cmd = ['adb', 'devices']
+    run = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    getvalue = run.stdout.readlines()
+    count = len(getvalue)
+    print getvalue
+    if count == 3:
+        print 'Device ID:', getvalue[1].split('device')[0].strip()
+        return 1
+    elif count > 3:
+        print 'Multiple devices connected.'
+        n = 1
+        for i in getvalue[n:-1]:
+            print 'Device ID:', getvalue[n].split('device')[0].strip()
+            n += 1
+        return 2
+    else:
+        print 'No devices is connected.'
+        return 0
+
+
 # ------------------Test start, mark start time.--------------------
+# 定义测试开始的时间
 start_time = time.time()
 
 # set start times.
@@ -221,15 +263,15 @@ print 'Result path:', Result_path
 
 # Test loop.
 while int(time.time() - start_time) <= run_time * 3600:
-    r = adbCmd.adbSerialno('adb get-serialno')
-    if r[0] == 'unknown':
-        logger.warning('No devices is connected.')
-        break
-    elif len(r) > 1:
-        logger.warning('Multiple devices connected.')
-        break
+    if chkDevices() != 1:
+        print 'please check device is already connected, or more devices.'
+        sys.exit()
+    elif chkPower() < 10:  # check Android power.
+        print 'Power less than 10%.'
+        os.system('adb shell input keyevent POWER')
+        time.sleep(1800)
+        os.system('adb shell input keyevent POWER')
     else:
-        logger.info('Connected devices : {}'.format(r[0]))
         # Creat log dir.
         md_path(Result_path)
         logger.info('Times: {} '.format(n))
