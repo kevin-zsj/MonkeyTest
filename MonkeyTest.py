@@ -172,34 +172,34 @@ else:
     adb_command += '--pct-anyevent ' + str(pct_anyevent) + " "
 
 
-def cur_times(x):
+def cur_times(dateFormat):
     '''
     date：Get the current date，e.g. 20130808
     time：Get the current time，e.g. 135035
     datetime：Get the current datetime，e.g. 20130808-135035
     '''
-    if x is 'date':
-        x = time.strftime('%Y%m%d', time.localtime(time.time()))
-        return x
-    elif x is 'time':
-        x = time.strftime('%H%M%S', time.localtime(time.time()))
-        return x
-    elif x is 'datetime':
-        x = time.strftime('%Y%m%d-%H%M%S', time.localtime(time.time()))
-        return x
+    if dateFormat is 'date':
+        dateFormat = time.strftime('%Y%m%d', time.localtime(time.time()))
+        return dateFormat
+    elif dateFormat is 'time':
+        dateFormat = time.strftime('%H%M%S', time.localtime(time.time()))
+        return dateFormat
+    elif dateFormat is 'datetime':
+        dateFormat = time.strftime('%Y%m%d-%H%M%S', time.localtime(time.time()))
+        return dateFormat
     else:
         logger.warning('The time parameter is valid')
 
 
-def md_path(x):
+def md_path(logDir):
     '''
     Create log path.
     '''
-    if os.path.exists(x):
+    if os.path.exists(logDir):
         logger.info('log dir is exist...')
     else:
         logger.info('log dir is not exist, Create it now...')
-        os.makedirs(x)
+        os.makedirs(logDir)
         logger.info('Created.')
 
 
@@ -292,7 +292,8 @@ while int(time.time() - start_time) <= run_time * 3600:
         bugreport = 'adb bugreport %s' % Result_path
         print bugreport
         os.system(bugreport)
-        time.sleep(1)
+        print 'Wait a minute.'
+        time.sleep(5)
     n += 1
 else:
     fl = logAnalysis.traverse(Result_path)
@@ -306,6 +307,3 @@ else:
     else:
         logger.info('No crashed app is fond.')
     testDone()
-
-# use explorer open log dir.
-# os.system(r'explorer /select,%s' %(Result_path))
