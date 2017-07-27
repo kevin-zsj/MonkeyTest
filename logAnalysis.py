@@ -35,8 +35,8 @@ def crashlist(filesList):
                 mCrash = reCrash(line)
                 if mCrash:
                     crashCount.append(mCrash)
-        except:
-            print('Faild to open file the %s.' % filesName)
+        except IOError, e:
+            print('Faild to open file the %s.' % filesName, e)
     return crashCount
 
 
