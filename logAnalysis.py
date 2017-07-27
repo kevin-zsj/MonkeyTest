@@ -5,7 +5,7 @@ import re
 
 def traverse(path):
     '''
-    ±éÀúÖ¸¶¨Â·¾¶ÏÂµÄËùÓĞÎÄ¼ş
+    éå†æŒ‡å®šè·¯å¾„ä¸‹çš„æ‰€æœ‰æ–‡ä»¶
     '''
     filesName = []
     for root, dirs, files in os.walk(path):
@@ -16,8 +16,8 @@ def traverse(path):
 
 def reCrash(s):
     '''
-    ÕıÔòÆ¥ÅäÌáÈ¡³öcrashed package name
-    Èç£º´Ó// CRASH: com.wandoujia.phoenix2 (pid 3903)ÖĞÌáÈ¡³öcom.wandoujia.phoenix2
+    æ­£åˆ™åŒ¹é…æå–å‡ºcrashed package name
+    å¦‚ï¼šä»// CRASH: com.wandoujia.phoenix2 (pid 3903)ä¸­æå–å‡ºcom.wandoujia.phoenix2
     '''
     m = '//\sCRASH:\s(.*)\s[(]pid\s(.*)[)]'
     n = re.match(m, s)
@@ -45,6 +45,7 @@ def xTable(l):
     for i in l:
         res[i] = res.get(i, 0) + 1
     return res
+
 
 if __name__ == '__main__':
     filesList = traverse(r'D:\log\MonkeyTest\20130908-171150')

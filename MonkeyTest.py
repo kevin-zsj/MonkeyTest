@@ -8,11 +8,11 @@ import subprocess
 import sys
 import time
 
-# import adbCmd
 import logAnalysis
+import SnapScreen as snap
 
 # hours
-run_time = 2
+run_time = 10
 
 # 发送Event数量
 events = 50000
@@ -217,10 +217,10 @@ def chkPower():
     '''
     检查样机电量的百分比，返回一个int类型的数值
     '''
-    cmd = ['adb', 'shell', 'cat', '/sys/class/power_supply/battery/uevent',
-           '|', 'grep', 'POWER_SUPPLY_CAPACITY']
+    cmd = ['adb', 'shell', 'dumpsys', 'battery', '|', 'grep', 'level']
     run = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    getvalue = run.stdout.read().split('=')[1].strip()
+    getvalue = run.stdout.read().split(':')[1].strip()
+    print "Battery Power : " + getvalue
     return int(getvalue)
 
 
@@ -286,7 +286,12 @@ while int(time.time() - start_time) <= run_time * 3600:
 
         # Test running.
         os.system(run_monkey)
-
+        # snap screen.
+        snap.androidScreencap(Result_path)
+        # take bugreport.
+        bugreport = 'adb bugreport %s' % Result_path
+        print bugreport
+        os.system(bugreport)
         time.sleep(1)
     n += 1
 else:
