@@ -1,6 +1,6 @@
 2017-07-27 v1.1 What's new:
 ==============================
-1. 使用dumpsys battery获取电量**不需要root权限**
+1. 使用dumpsys battery获取电量（**不需要root权限**）
 2. 增加截图功能
 
 2017-06-13 v1.0 What's new:
