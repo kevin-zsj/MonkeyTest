@@ -207,9 +207,9 @@ def testDone():
     '''
     works done.
     '''
-    logger.info('Test Termination: Test time to: %s' %
-                (time.time() - start_time))
-    logger.info('%s %s %s', *('Tested ', n - 1, ' times.'))
+    logger.info('Test Termination: Test time to: {}'.format(time.time() - start_time))
+    # logger.info('%s %s %s', *('Tested ', n - 1, ' times.'))
+    logger.info('Tested {} times.'.format(n - 1)
     logger.info('Test is done.')
 
 
@@ -217,31 +217,32 @@ def chkPower():
     '''
     检查样机电量的百分比，返回一个int类型的数值
     '''
-    cmd = ['adb', 'shell', 'dumpsys', 'battery', '|', 'grep', 'level']
-    run = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    getvalue = run.stdout.read().split(':')[1].strip()
+    cmd=['adb', 'shell', 'dumpsys', 'battery', '|', 'grep', 'level']
+    run=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    getvalue=run.stdout.read().split(':')[1].strip()
     print "Battery Power : " + getvalue
     return int(getvalue)
 
 
 def chkDevices():
+    # TODO(Kevin): change the way of check devices SN, from "adb devices" to "adb  get-serialno"
     '''
     使用‘adb shell’命令获取设备连接信息，若有Android设备连接则打印Devices ID，同时返回一个值：
     0 ：无设备连接
     1 ：有一台设备连接
     2 ：有两台或两台以上的设备连接
     '''
-    cmd = ['adb', 'devices']
-    run = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    getvalue = run.stdout.readlines()
-    count = len(getvalue)
+    cmd=['adb', 'devices']
+    run=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    getvalue=run.stdout.readlines()
+    count=len(getvalue)
     print getvalue
     if count == 3:
         print 'Device ID:', getvalue[1].split('device')[0].strip()
         return 1
     elif count > 3:
         print 'Multiple devices connected.'
-        n = 1
+        n=1
         for i in getvalue[n:-1]:
             print 'Device ID:', getvalue[n].split('device')[0].strip()
             n += 1
@@ -253,12 +254,12 @@ def chkDevices():
 
 # ------------------Test start, mark start time.--------------------
 # 定义测试开始的时间
-start_time = time.time()
+start_time=time.time()
 
 # set start times.
-n = 1
-now = cur_times('datetime')
-Result_path = '{}/MonkeyResult/{}'.format(cpath, now)
+n=1
+now=cur_times('datetime')
+Result_path='{}/MonkeyResult/{}'.format(cpath, now)
 print 'Result path:', Result_path
 
 # Test loop.
@@ -275,31 +276,32 @@ while int(time.time() - start_time) <= run_time * 3600:
         # Creat log dir.
         md_path(Result_path)
         logger.info('Times: {} '.format(n))
-        events_log_name = 'MonkeyEvents_{}.log'.format(cur_times('time'))
+        events_log_name='MonkeyEvents_{}.log'.format(cur_times('time'))
         logger.info('Log_name: {}'.format(events_log_name))
         # last MonkeyTest command.
-        run_monkey = 'adb shell monkey %s%s > %s\\%s' % (adb_command,
-                                                         events,
-                                                         Result_path,
-                                                         events_log_name)
-        logger.info('%s %s', *('Run Command:', run_monkey))
+        run_monkey='adb shell monkey {}{} > {}\\{}'.format(adb_command,
+                                                             events,
+                                                             Result_path,
+                                                             events_log_name)
+        logger.info('Run Command: {}'.format(run_monkey))
 
         # Test running.
         os.system(run_monkey)
         # snap screen.
         snap.androidScreencap(Result_path)
         # take bugreport.
-        bugreport = 'adb bugreport %s' % Result_path
-        print bugreport
+        bugreport='adb bugreport {}'.format(Result_path)
+        logger.info(bugreport)
         os.system(bugreport)
-        print 'Wait a minute.'
+        logger.info('Wait a minute.')
         time.sleep(5)
     n += 1
 else:
-    fl = logAnalysis.traverse(Result_path)
-    analy = logAnalysis.crashlist(fl)
+    # TODO(Kevin): Now "crash info" is not in MonkeyTest events log, need to modify this code.
+    fl=logAnalysis.traverse(Result_path)
+    analy=logAnalysis.crashlist(fl)
     # print analy
-    results = logAnalysis.xTable(analy)
+    results=logAnalysis.xTable(analy)
     if results:
         logger.info('PackageName --- Crashed times')
         for k in results:
