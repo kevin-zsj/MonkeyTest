@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 '''
 __author__  = 'Kevin'
+Email = 'kevin@ishow.me'
 '''
 import logging
 import os
@@ -8,12 +9,10 @@ import subprocess
 import sys
 import time
 
-import logAnalysis
 import SnapScreen as snap
 
 # hours
-run_time = 10
-
+Run_Time = 10
 # 发送Event数量
 events = 50000
 
@@ -102,8 +101,7 @@ ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
 
 # 定义handler的输出格式
-formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s')
 fh.setFormatter(formatter)
 ch.setFormatter(formatter)
 
@@ -185,7 +183,8 @@ def cur_times(dateFormat):
         dateFormat = time.strftime('%H%M%S', time.localtime(time.time()))
         return dateFormat
     elif dateFormat is 'datetime':
-        dateFormat = time.strftime('%Y%m%d-%H%M%S', time.localtime(time.time()))
+        dateFormat = time.strftime(
+            '%Y%m%d-%H%M%S', time.localtime(time.time()))
         return dateFormat
     else:
         logger.warning('The time parameter is valid')
@@ -207,9 +206,10 @@ def testDone():
     '''
     works done.
     '''
-    logger.info('Test Termination: Test time to: {}'.format(time.time() - start_time))
+    ctime = time.time() - start_time
+    logger.info('Test Termination: Test time to: %s', ctime)
     # logger.info('%s %s %s', *('Tested ', n - 1, ' times.'))
-    logger.info('Tested {} times.'.format(n - 1)
+    logger.info('Tested %s times.', (n - 1))
     logger.info('Test is done.')
 
 
@@ -217,95 +217,94 @@ def chkPower():
     '''
     检查样机电量的百分比，返回一个int类型的数值
     '''
-    cmd=['adb', 'shell', 'dumpsys', 'battery', '|', 'grep', 'level']
-    run=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    getvalue=run.stdout.read().split(':')[1].strip()
-    print "Battery Power : " + getvalue
-    return int(getvalue)
+    cmd = ['adb', 'shell', 'dumpsys', 'battery', '|', 'grep', 'level']
+    run = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    batt = run.stdout.read()
+    if "level" not in batt:
+        print "Query battery information failed!"
+        return False
+    else:
+        getvalue = batt.split(':')[1].strip()
+        print "Battery level : " + getvalue
+        return int(getvalue)
 
 
 def chkDevices():
-    # TODO(Kevin): change the way of check devices SN, from "adb devices" to "adb  get-serialno"
     '''
-    使用‘adb shell’命令获取设备连接信息，若有Android设备连接则打印Devices ID，同时返回一个值：
+    使用‘adb devices’命令获取设备连接信息，若有Android设备连接则返回一个值：
     0 ：无设备连接
     1 ：有一台设备连接
     2 ：有两台或两台以上的设备连接
     '''
-    cmd=['adb', 'devices']
-    run=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    getvalue=run.stdout.readlines()
-    count=len(getvalue)
-    print getvalue
+    cmd = ['adb', 'devices']
+    run = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    getvalue = run.stdout.readlines()
+    count = len(getvalue)
+    # print getvalue
     if count == 3:
-        print 'Device ID:', getvalue[1].split('device')[0].strip()
+        sn = getvalue[1].split('device')[0].strip()
+        # print sn
+        logger.info('Device ID: %s', sn)
         return 1
     elif count > 3:
-        print 'Multiple devices connected.'
-        n=1
-        for i in getvalue[n:-1]:
-            print 'Device ID:', getvalue[n].split('device')[0].strip()
-            n += 1
+        logger.warning('Multiple devices connected.')
+        for i in getvalue[1:-1]:
+            # print "----------", i
+            # sn = getvalue[1].split('device')[0].strip()
+            logger.info(i)
         return 2
     else:
-        print 'No devices is connected.'
-        return 0
+        logger.warning('No devices is connected.')
+        # return 0
 
 
 # ------------------Test start, mark start time.--------------------
 # 定义测试开始的时间
-start_time=time.time()
+start_time = time.time()
 
-# set start times.
-n=1
-now=cur_times('datetime')
-Result_path='{}/MonkeyResult/{}'.format(cpath, now)
+now = cur_times('datetime')
+Result_path = '{}/MonkeyResult/{}'.format(cpath, now)
 print 'Result path:', Result_path
 
+# set start times.
+n = 1
 # Test loop.
-while int(time.time() - start_time) <= run_time * 3600:
-    if chkDevices() != 1:
-        print 'please check device is already connected, or more devices.'
-        sys.exit()
-    elif chkPower() < 10:  # check Android power.
-        print 'Power less than 10%.'
+while int(time.time() - start_time) <= Run_Time * 3600:
+    devices = chkDevices()
+    batt_level = chkPower()
+    if devices != 1:
+        logger.warning(
+            'please check device is already connected, or more devices.')
+        sys.exit()  # Currently, multi-device operation is not supported.
+    if batt_level < 10:  # check Android power.
+        logger.info('The battery level is %s, start charge.', batt_level)
         os.system('adb shell input keyevent POWER')
         time.sleep(1800)
         os.system('adb shell input keyevent POWER')
     else:
+        logger.warning("Query battery information failed!")
+        sys.exit()
+
         # Creat log dir.
         md_path(Result_path)
-        logger.info('Times: {} '.format(n))
-        events_log_name='MonkeyEvents_{}.log'.format(cur_times('time'))
-        logger.info('Log_name: {}'.format(events_log_name))
+        logger.info('Times: %s ', n)
+        events_log_name = 'MonkeyEvents_{}.log'.format(cur_times('time'))
+        logger.info('Log_name: %s', events_log_name)
         # last MonkeyTest command.
-        run_monkey='adb shell monkey {}{} > {}\\{}'.format(adb_command,
+        run_monkey = 'adb shell monkey {}{} > {}\\{}'.format(adb_command,
                                                              events,
                                                              Result_path,
                                                              events_log_name)
-        logger.info('Run Command: {}'.format(run_monkey))
+        logger.info('Run Command: %s', run_monkey)
 
         # Test running.
         os.system(run_monkey)
         # snap screen.
         snap.androidScreencap(Result_path)
         # take bugreport.
-        bugreport='adb bugreport {}'.format(Result_path)
+        bugreport = 'adb bugreport {}'.format(Result_path)
         logger.info(bugreport)
-        os.system(bugreport)
+        # os.system(bugreport)
         logger.info('Wait a minute.')
         time.sleep(5)
     n += 1
-else:
-    # TODO(Kevin): Now "crash info" is not in MonkeyTest events log, need to modify this code.
-    fl=logAnalysis.traverse(Result_path)
-    analy=logAnalysis.crashlist(fl)
-    # print analy
-    results=logAnalysis.xTable(analy)
-    if results:
-        logger.info('PackageName --- Crashed times')
-        for k in results:
-            logger.info('->%s --- %s times' % (k, results[k]))
-    else:
-        logger.info('No crashed app is fond.')
-    testDone()
