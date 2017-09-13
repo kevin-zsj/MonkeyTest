@@ -44,10 +44,10 @@ pct_majornav = False
 pct_syskeys = False
 
 # 启动Activity的百分比。在随机间隔里，Monkey将执行一个startActivity()调用，作为最大程度覆盖包中全部Activity的一种方法
-pct_appswitch = 50
+pct_appswitch = False
 
 # 调整其它类型事件的百分比。它包罗了所有其它类型的事件，如：按键、其它不常用的设备按钮、等等。
-pct_anyevent = 0
+pct_anyevent = False
 
 # 指定了一个或几个包，一个“-p”对应一个包。
 p_allowed_package_name = False
@@ -112,6 +112,7 @@ logger.addHandler(ch)
 
 adb_command = ''
 cpath = sys.path[0]
+print "cpath：", cpath
 
 # 格式化Log等级，一个-v最低，三个-v最高
 if log_lev is 3:
@@ -215,7 +216,7 @@ def testDone():
 
 def chkPower():
     '''
-    检查样机电量的百分比，返回一个int类型的数值
+    Use the "adb shell dumpsys battery" command to get battery level, return int value.
     '''
     cmd = ['adb', 'shell', 'dumpsys', 'battery', '|', 'grep', 'level']
     run = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -231,10 +232,10 @@ def chkPower():
 
 def chkDevices():
     '''
-    使用‘adb devices’命令获取设备连接信息，若有Android设备连接则返回一个值：
-    0 ：无设备连接
-    1 ：有一台设备连接
-    2 ：有两台或两台以上的设备连接
+    Use the "adb devices" command to get the device information and return:
+    0: NO device connection
+    1: ONE device connection
+    2: TWO or MORE devices connected
     '''
     cmd = ['adb', 'devices']
     run = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -249,8 +250,6 @@ def chkDevices():
     elif count > 3:
         logger.warning('Multiple devices connected.')
         for i in getvalue[1:-1]:
-            # print "----------", i
-            # sn = getvalue[1].split('device')[0].strip()
             logger.info(i)
         return 2
     else:
@@ -281,30 +280,33 @@ while int(time.time() - start_time) <= Run_Time * 3600:
         os.system('adb shell input keyevent POWER')
         time.sleep(1800)
         os.system('adb shell input keyevent POWER')
-    else:
+    elif not batt_level:
         logger.warning("Query battery information failed!")
         sys.exit()
 
-        # Creat log dir.
-        md_path(Result_path)
-        logger.info('Times: %s ', n)
-        events_log_name = 'MonkeyEvents_{}.log'.format(cur_times('time'))
-        logger.info('Log_name: %s', events_log_name)
-        # last MonkeyTest command.
-        run_monkey = 'adb shell monkey {}{} > {}\\{}'.format(adb_command,
-                                                             events,
-                                                             Result_path,
-                                                             events_log_name)
-        logger.info('Run Command: %s', run_monkey)
+    # Creat log dir.
+    md_path(Result_path)
+    logger.info('Times: %s ', n)
+    Event_Log = Result_path.replace('\\', '/') + \
+        '/MonkeyEvents_{}.log'.format(cur_times('time'))
+    Event_Log_Flie = open(Event_Log, 'w')
+    #-------------use subprocess run command--------------
+    run_monkey = 'adb shell monkey {}{}'.format(adb_command, events)
+    logger.info('Monkey Command is: %s', run_monkey)
+    start = subprocess.Popen(run_monkey.split(),
+                             stdout=Event_Log_Flie,
+                             stderr=Event_Log_Flie)
+    start.wait()
+    start.terminate()
 
-        # Test running.
-        os.system(run_monkey)
-        # snap screen.
-        snap.androidScreencap(Result_path)
-        # take bugreport.
-        bugreport = 'adb bugreport {}'.format(Result_path)
-        logger.info(bugreport)
-        # os.system(bugreport)
-        logger.info('Wait a minute.')
-        time.sleep(5)
+    # snap screen.
+    logger.info("Find Exception, snap screen.")
+    snap.androidScreencap(Result_path)
+    # take bugreport.
+    logger.info("Pull bugreport ......")
+    bugreport = 'adb bugreport {}'.format(Result_path)
+    # logger.info(bugreport)
+    os.system(bugreport)
+    logger.info('Wait a minute.')
+    time.sleep(5)
     n += 1
