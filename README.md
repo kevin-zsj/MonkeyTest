@@ -4,12 +4,11 @@ The Monkey is a program that runs on your emulator or device and generates pseud
 
 # Requirements
 
-1. python2.7.x
-2. DUT must be Android system.
-3. DUT must be connected to the PC
+1. DUT must be Android system.
+2. DUT must be connected to the PC
 
 # Installation
 
 1. Download the latest release
 2. Extract the archive
-3. Run MonkeyTest.py
+3. Run Start.bat or Start.py
