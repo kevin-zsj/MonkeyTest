@@ -1,5 +1,5 @@
 #!/system/bin/sh
-i=72;
+i=1000;
 while [[ $i -gt 0 ]];do
 	echo "time " $i "start...";
 	dt=`date +%H%M%S`;
@@ -10,7 +10,7 @@ while [[ $i -gt 0 ]];do
    		kill -9 $id3 
    		echo "kill logcat" 
 	done
-	logcat >> /mnt/sdcard/logcat_$dt.txt &
+	logcat -b all >> /mnt/sdcard/logcat_$dt.txt &
 
 	monkey --ignore-timeouts --ignore-security-exceptions --pkg-blacklist-file /sdcard/black.txt --throttle 500 -s $dt -v -v -v 125000 >> /sdcard/monkey_log_$dt.txt;
 	((i--));
