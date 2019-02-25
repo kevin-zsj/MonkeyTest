@@ -46,6 +46,8 @@ def push_test_files(device):
     os.system('adb -s {} push {}/startMonkey.sh /sdcard/'.format(device, local_path))
     print('Pushing black names ...')
     os.system('adb -s {} push {}/data/black.txt /sdcard/'.format(device, local_path))
+    print('Push event_counter ...')
+    os.system('adb -s {} push {}/event_counter.sh /sdcard/'.format(device, local_path))
 
 
 def run_test(device):
