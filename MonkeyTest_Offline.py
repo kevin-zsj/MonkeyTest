@@ -9,7 +9,7 @@ import subprocess
 
 def check_devices():
     cmd = 'adb devices'
-    run = subprocess.Popen(cmd, shell=True,stdout=subprocess.PIPE)
+    run = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     output = run.stdout.readlines()
     # print(output)
     # print(len(output))
@@ -23,7 +23,7 @@ def check_devices():
     if len(devices_lst) > 1:
         print('Devices list: ')
         for k, v in enumerate(devices_lst):
-            print(k, '：', v)
+            print(k, ':', v)
         option = input('Enter a ID for your device: ')
         if int(option) in range(len(devices_lst)):
             device = devices_lst[int(option)]
@@ -38,6 +38,7 @@ def check_devices():
         print('Devices is: {}'.format(device))
     return device
 
+
 def push_test_files(device):
     if device is None:
         device = ''
@@ -47,7 +48,8 @@ def push_test_files(device):
     print('Pushing black names ...')
     os.system('adb -s {} push {}/data/black.txt /sdcard/'.format(device, local_path))
     print('Push event_counter ...')
-    os.system('adb -s {} push {}/event_counter.sh /sdcard/'.format(device, local_path))
+    os.system(
+        'adb -s {} push {}/event_counter.sh /sdcard/'.format(device, local_path))
 
 
 def run_test(device):
@@ -55,12 +57,15 @@ def run_test(device):
         device = ''
     # local_path = sys.path[0]
     print('Run test ...')
-    cmd = 'adb -s {} shell "sh /sdcard/startMonkey.sh >/dev/null 2>&1 &"'.format(device)
+    cmd = 'adb -s {} shell "sh /sdcard/startMonkey.sh >/dev/null 2>&1 &"'.format(
+        device)
+    print(cmd)
     run = subprocess.run(cmd, shell=True)
     if run.returncode == 0:
         print('Test is running ...')
     else:
         print('Test Failed.')
+
 
 if __name__ == '__main__':
     device = check_devices()
